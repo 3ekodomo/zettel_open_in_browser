@@ -31,18 +31,36 @@ public class MainActivity extends Activity {
 
         Intent intent = getIntent();
         
+        if (intent != null && intent.getAction() != null) {
+            Log.d(TAG, "onCreate intent action: " + intent.getAction());
+        }
+        if (intent != null && intent.getExtras() != null) {
+            for (String key : intent.getExtras().keySet()) {
+                Log.d(TAG, "onCreate extra: " + key + " = " + intent.getExtras().get(key));
+            }
+        }
+
         // Attempt to get arguments passed directly by Zettel Notes Intent
-        String uriString = intent != null ? intent.getStringExtra(AbstractPluginReceiver.EXTRAS_URI) : null;
-        String repositoryString = intent != null ? intent.getStringExtra(AbstractPluginReceiver.EXTRAS_REPOSITORY) : null;
+        String uriString = null;
+        String repositoryString = null;
+
+        if (intent != null && intent.getExtras() != null) {
+            Object uriObj = intent.getExtras().get(AbstractPluginReceiver.EXTRAS_URI);
+            if (uriObj != null) uriString = uriObj.toString();
+
+            Object repoObj = intent.getExtras().get(AbstractPluginReceiver.EXTRAS_REPOSITORY);
+            if (repoObj != null) repositoryString = repoObj.toString();
+        }
 
         // Fallback to SharedPreferences if intent extras are missing (populated by PluginReceiver)
         if (uriString == null) {
             SharedPreferences notePrefs = getSharedPreferences(PluginReceiver.PREFS_NOTE_DATA, MODE_PRIVATE);
             uriString = notePrefs.getString(AbstractPluginReceiver.EXTRAS_URI, null);
             repositoryString = notePrefs.getString(AbstractPluginReceiver.EXTRAS_REPOSITORY, null);
+            Log.d(TAG, "Loaded from SharedPreferences - uri: " + uriString + ", repository: " + repositoryString);
+        } else {
+            Log.d(TAG, "Loaded from Intent - uri: " + uriString + ", repository: " + repositoryString);
         }
-
-        Log.d(TAG, "uri: " + uriString + ", repository: " + repositoryString);
 
         // ABORT TRIGGER: If the plugin missed the NOTE_OPENED broadcast
         if (uriString == null) {
@@ -106,13 +124,8 @@ public class MainActivity extends Activity {
         String url = BASE_URL;
 
         try {
-            // Append Repository (e.g., "B2%2F")
-            if (repositoryString != null && !repositoryString.isEmpty()) {
-                String repo = repositoryString;
-                if (repo.endsWith("/")) repo = repo.substring(0, repo.length() - 1);
-                url += URLEncoder.encode(repo, "UTF-8").replace("+", "%20") + "%2F";
-            }
-            // Append Filename (e.g., "Note_1.md")
+            // Append Filename (e.g., "B2/Note_1.md" becomes "B2%2FNote_1.md")
+            // Zettel repo (repositoryString) should be treated as root and left out of the url
             url += URLEncoder.encode(filename, "UTF-8").replace("+", "%20");
         } catch (UnsupportedEncodingException e) {
             Log.e(TAG, "URL Encoding failed", e);
