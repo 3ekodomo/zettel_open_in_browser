@@ -43,7 +43,7 @@
         </activity>
 
         <meta-data
-            android:name="org.eu.thedoc.zettelnotes.interfaces.version"
+            android:name="@string/plugin_button_metadata_api_string"
             android:value="@string/button_api_version" />
 
     </application>
