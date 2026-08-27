@@ -14,6 +14,7 @@ import org.eu.thedoc.zettelnotes.broadcasts.AbstractPluginReceiver;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
+import java.util.List;
 
 public class MainActivity extends Activity {
 
@@ -36,6 +37,7 @@ public class MainActivity extends Activity {
         String uriString = intent.getStringExtra(AbstractPluginReceiver.EXTRAS_URI);
         String repositoryString = intent.getStringExtra(AbstractPluginReceiver.EXTRAS_REPOSITORY);
 
+        // Fallback to SharedPreferences if extras are missing
         if (uriString == null) {
             SharedPreferences notePrefs = getSharedPreferences(PluginReceiver.PREFS_NOTE_DATA, MODE_PRIVATE);
             uriString = notePrefs.getString(AbstractPluginReceiver.EXTRAS_URI, null);
@@ -51,6 +53,7 @@ public class MainActivity extends Activity {
         }
 
         String filename = uriString;
+        
         if (uriString.startsWith("content://") || uriString.startsWith("file://")) {
             filename = Uri.parse(uriString).getLastPathSegment();
             if (filename == null) {
@@ -58,28 +61,48 @@ public class MainActivity extends Activity {
             }
         } else if (uriString.startsWith("https://thedoc.eu.org/app-links/zettel-notes/")) {
             Uri uri = Uri.parse(uriString);
-            java.util.List<String> segments = uri.getPathSegments();
+            List<String> segments = uri.getPathSegments();
             // Expected segments: [app-links, zettel-notes, repository_name, folder1, folder2, ..., note.md]
-            // We want to extract everything from index 3 onwards (i.e. skipping repository name at index 2)
-            if (segments.size() > 3) {
-                StringBuilder sb = new StringBuilder();
-                for (int i = 3; i < segments.size(); i++) {
-                    if (i > 3) sb.append("/");
-                    sb.append(segments.get(i));
+            if (segments.size() > 2) {
+                // Correctly extract the repository name instead of clearing it
+                repositoryString = segments.get(2); 
+                
+                if (segments.size() > 3) {
+                    StringBuilder sb = new StringBuilder();
+                    for (int i = 3; i < segments.size(); i++) {
+                        if (i > 3) sb.append("/");
+                        sb.append(segments.get(i));
+                    }
+                    filename = sb.toString();
+                } else {
+                    filename = "";
                 }
-                filename = sb.toString();
-                // We should also clear the repositoryString since we're handling it directly from the URI
-                repositoryString = "";
             }
+        }
+
+        if (filename == null || filename.isEmpty()) {
+            Log.e(TAG, "Filename is empty");
+            finish();
+            return;
+        }
+
+        // Sanitize leading slash to avoid double '%2F' encoding later
+        if (filename.startsWith("/")) {
+            filename = filename.substring(1);
         }
 
         String url = BASE_URL;
 
         try {
             if (repositoryString != null && !repositoryString.isEmpty()) {
-                url += URLEncoder.encode(repositoryString, "UTF-8") + "%2F";
+                String repo = repositoryString;
+                // Sanitize trailing slash
+                if (repo.endsWith("/")) {
+                    repo = repo.substring(0, repo.length() - 1);
+                }
+                url += URLEncoder.encode(repo, "UTF-8").replace("+", "%20") + "%2F";
             }
-            url += URLEncoder.encode(filename, "UTF-8");
+            url += URLEncoder.encode(filename, "UTF-8").replace("+", "%20");
         } catch (UnsupportedEncodingException e) {
             Log.e(TAG, "URL Encoding failed", e);
             finish();
@@ -116,7 +139,7 @@ public class MainActivity extends Activity {
         if (mIsFirstResume) {
             mIsFirstResume = false;
         } else if (mBrowserLaunched) {
-            finish();
+            finish(); // Close this transparent activity once we return from the browser
         }
     }
 }
