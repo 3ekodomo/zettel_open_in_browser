@@ -47,6 +47,21 @@ public class MainActivity extends Activity {
             if (filename == null) {
                 filename = uriString;
             }
+        } else if (uriString.startsWith("https://thedoc.eu.org/app-links/zettel-notes/")) {
+            Uri uri = Uri.parse(uriString);
+            java.util.List<String> segments = uri.getPathSegments();
+            // Expected segments: [app-links, zettel-notes, repository_name, folder1, folder2, ..., note.md]
+            // We want to extract everything from index 3 onwards (i.e. skipping repository name at index 2)
+            if (segments.size() > 3) {
+                StringBuilder sb = new StringBuilder();
+                for (int i = 3; i < segments.size(); i++) {
+                    if (i > 3) sb.append("/");
+                    sb.append(segments.get(i));
+                }
+                filename = sb.toString();
+                // We should also clear the repositoryString since we're handling it directly from the URI
+                repositoryString = "";
+            }
         }
 
         String url = BASE_URL;
