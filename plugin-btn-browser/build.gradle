@@ -17,6 +17,9 @@ android {
     buildTypes {
         release {
             minifyEnabled false
+            // Sign the test/release APK with Android's standard debug key so it
+            // is directly installable without a separate signing step.
+            signingConfig signingConfigs.debug
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
