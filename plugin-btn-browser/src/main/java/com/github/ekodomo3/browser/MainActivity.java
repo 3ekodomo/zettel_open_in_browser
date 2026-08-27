@@ -28,15 +28,16 @@ public class MainActivity extends Activity {
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        AppLogger.init(this);
 
         Intent intent = getIntent();
         
         if (intent != null && intent.getAction() != null) {
-            Log.d(TAG, "onCreate intent action: " + intent.getAction());
+            AppLogger.d(TAG, "onCreate intent action: " + intent.getAction());
         }
         if (intent != null && intent.getExtras() != null) {
             for (String key : intent.getExtras().keySet()) {
-                Log.d(TAG, "onCreate extra: " + key + " = " + intent.getExtras().get(key));
+                AppLogger.d(TAG, "onCreate extra: " + key + " = " + intent.getExtras().get(key));
             }
         }
 
@@ -57,14 +58,14 @@ public class MainActivity extends Activity {
             SharedPreferences notePrefs = getSharedPreferences(PluginReceiver.PREFS_NOTE_DATA, MODE_PRIVATE);
             uriString = notePrefs.getString(AbstractPluginReceiver.EXTRAS_URI, null);
             repositoryString = notePrefs.getString(AbstractPluginReceiver.EXTRAS_REPOSITORY, null);
-            Log.d(TAG, "Loaded from SharedPreferences - uri: " + uriString + ", repository: " + repositoryString);
+            AppLogger.d(TAG, "Loaded from SharedPreferences - uri: " + uriString + ", repository: " + repositoryString);
         } else {
-            Log.d(TAG, "Loaded from Intent - uri: " + uriString + ", repository: " + repositoryString);
+            AppLogger.d(TAG, "Loaded from Intent - uri: " + uriString + ", repository: " + repositoryString);
         }
 
         // ABORT TRIGGER: If the plugin missed the NOTE_OPENED broadcast
         if (uriString == null) {
-            Log.e(TAG, "No URI found in intent extras or SharedPreferences");
+            AppLogger.e(TAG, "No URI found in intent extras or SharedPreferences");
             Toast.makeText(this, "Note location not found!\nPlease close this note in Zettel Notes and open it again.", Toast.LENGTH_LONG).show();
             finish();
             return;
@@ -110,7 +111,7 @@ public class MainActivity extends Activity {
         }
 
         if (filename == null || filename.isEmpty()) {
-            Log.e(TAG, "Filename is empty");
+            AppLogger.e(TAG, "Filename is empty");
             Toast.makeText(this, "Could not extract filename from location", Toast.LENGTH_SHORT).show();
             finish();
             return;
@@ -128,12 +129,12 @@ public class MainActivity extends Activity {
             // Zettel repo (repositoryString) should be treated as root and left out of the url
             url += URLEncoder.encode(filename, "UTF-8").replace("+", "%20");
         } catch (UnsupportedEncodingException e) {
-            Log.e(TAG, "URL Encoding failed", e);
+            AppLogger.e(TAG, "URL Encoding failed", e);
             finish();
             return;
         }
 
-        Log.d(TAG, "Opening URL: " + url);
+        AppLogger.d(TAG, "Opening URL: " + url);
 
         SharedPreferences prefs = getSharedPreferences(SettingsActivity.PREFS, MODE_PRIVATE);
         boolean inAppBrowser = prefs.getBoolean(SettingsActivity.PREF_IN_APP_BROWSER, true);
@@ -152,7 +153,7 @@ public class MainActivity extends Activity {
                 Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
                 startActivity(browserIntent);
             } catch (Exception ex) {
-                Log.e(TAG, "Failed to launch external browser", ex);
+                AppLogger.e(TAG, "Failed to launch external browser", ex);
                 Toast.makeText(this, "No web browser app found on device.", Toast.LENGTH_SHORT).show();
                 finish();
                 return;
