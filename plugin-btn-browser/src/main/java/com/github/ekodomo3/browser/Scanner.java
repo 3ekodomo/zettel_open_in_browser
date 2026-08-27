@@ -17,10 +17,20 @@ public class Scanner extends ScanInterface {
     public Listener getListener() {
         return new Listener() {
             @Override
-            public void onScanText(Context context, String category, String fileUri, String fileTitle, String text) {
+            public boolean onScanText(Context context, String category, String fileUri, String fileTitle, String text) {
                 // Intercept the metadata when Zettel Notes loads the note
                 currentRepository = category;
                 currentUri = fileUri;
+                return false;
+            }
+
+            @Override
+            public String onProcessText(Context context, String text) {
+                return text;
+            }
+
+            @Override
+            public void onDeleteUris(Context context, String category, java.util.List<String> uris) {
             }
         };
     }
