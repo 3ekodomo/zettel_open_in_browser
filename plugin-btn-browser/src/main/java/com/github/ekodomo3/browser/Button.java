@@ -14,8 +14,18 @@ public class Button extends ButtonInterface {
     @Override
     public void onClick() {
       if (mCallback != null) {
+        Intent intent = new Intent(INTENT_ACTION);
+        
+        // Inject the captured URI and Repository into the intent
+        if (Scanner.currentUri != null) {
+            intent.putExtra(org.eu.thedoc.zettelnotes.broadcasts.AbstractPluginReceiver.EXTRAS_URI, Scanner.currentUri);
+        }
+        if (Scanner.currentRepository != null) {
+            intent.putExtra(org.eu.thedoc.zettelnotes.broadcasts.AbstractPluginReceiver.EXTRAS_REPOSITORY, Scanner.currentRepository);
+        }
+        
         mCallback.setActivityResultListener(result -> { /* no result expected */ });
-        mCallback.startActivityForResult(new Intent(INTENT_ACTION));
+        mCallback.startActivityForResult(intent);
       }
     }
 
