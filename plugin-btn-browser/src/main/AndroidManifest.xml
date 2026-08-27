@@ -59,6 +59,15 @@
             </intent-filter>
         </activity>
 
+        <receiver
+           android:name=".PluginReceiver"
+           android:exported="true">
+            <intent-filter>
+                <action android:name="org.eu.thedoc.zettelnotes.NOTE_OPENED" />
+                <action android:name="org.eu.thedoc.zettelnotes.broadcast.NOTE_OPENED" />
+                <action android:name="org.eu.thedoc.zettelnotes.intent.NOTE_OPENED" />
+            </intent-filter>
+        </receiver>
 
     </application>
 
