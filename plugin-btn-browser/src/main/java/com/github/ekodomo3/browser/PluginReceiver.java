@@ -27,8 +27,8 @@ public class PluginReceiver extends BroadcastReceiver {
             uri = uriObj.toString();
         } else if (intent.getData() != null) {
             uri = intent.getData().toString();
-        } else if (intent.getStringExtra(Intent.EXTRA_TEXT) != null) {
-            uri = intent.getStringExtra(Intent.EXTRA_TEXT);
+        } else if (intent.getExtras() != null && intent.getExtras().get(Intent.EXTRA_TEXT) != null) {
+            uri = intent.getExtras().get(Intent.EXTRA_TEXT).toString();
         } else if (intent.getParcelableExtra(Intent.EXTRA_STREAM) != null) {
             uri = intent.getParcelableExtra(Intent.EXTRA_STREAM).toString();
         }
