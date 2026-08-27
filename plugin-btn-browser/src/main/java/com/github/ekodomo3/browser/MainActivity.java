@@ -44,28 +44,40 @@ public class MainActivity extends Activity {
 
         Log.d(TAG, "uri: " + uriString + ", repository: " + repositoryString);
 
+        // ABORT TRIGGER: If the plugin missed the NOTE_OPENED broadcast
         if (uriString == null) {
             Log.e(TAG, "No URI found in intent extras or SharedPreferences");
-            Toast.makeText(this, "No note data found. Please open a note first.", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Note location not found!\nPlease close this note in Zettel Notes and open it again.", Toast.LENGTH_LONG).show();
             finish();
             return;
         }
 
         String filename = uriString;
+        String decodedUri = Uri.decode(uriString);
         
-        // Parse filename out of the provided URI
-        if (uriString.startsWith("content://") || uriString.startsWith("file://")) {
-            filename = Uri.parse(uriString).getLastPathSegment();
-            if (filename == null) {
-                filename = uriString;
+        // Smarter URI parsing to extract the exact relative file path (preserves subfolders)
+        if (decodedUri.startsWith("content://") || decodedUri.startsWith("file://")) {
+            if (repositoryString != null && !repositoryString.isEmpty() && decodedUri.contains(repositoryString + "/")) {
+                // Extract everything AFTER the repository name
+                filename = decodedUri.substring(decodedUri.indexOf(repositoryString + "/") + repositoryString.length() + 1);
+            } else {
+                // Fallback basic segment extraction
+                String lastSegment = Uri.parse(decodedUri).getLastPathSegment();
+                if (lastSegment != null) {
+                    if (lastSegment.contains("/")) {
+                        filename = lastSegment.substring(lastSegment.lastIndexOf('/') + 1);
+                    } else if (lastSegment.contains(":")) {
+                        filename = lastSegment.substring(lastSegment.lastIndexOf(':') + 1);
+                    } else {
+                        filename = lastSegment;
+                    }
+                }
             }
-        } else if (uriString.startsWith("https://thedoc.eu.org/app-links/zettel-notes/")) {
-            Uri uri = Uri.parse(uriString);
+        } else if (decodedUri.startsWith("https://thedoc.eu.org/app-links/zettel-notes/")) {
+            Uri uri = Uri.parse(decodedUri);
             List<String> segments = uri.getPathSegments();
-            // Expected segments: [app-links, zettel-notes, repository_name, folder1, folder2, ..., note.md]
             if (segments.size() > 2) {
                 repositoryString = segments.get(2); 
-                
                 if (segments.size() > 3) {
                     StringBuilder sb = new StringBuilder();
                     for (int i = 3; i < segments.size(); i++) {
@@ -81,12 +93,12 @@ public class MainActivity extends Activity {
 
         if (filename == null || filename.isEmpty()) {
             Log.e(TAG, "Filename is empty");
-            Toast.makeText(this, "Could not determine filename", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Could not extract filename from location", Toast.LENGTH_SHORT).show();
             finish();
             return;
         }
 
-        // Sanitize leading slash to avoid double '%2F' encoding
+        // Sanitize leading slash
         if (filename.startsWith("/")) {
             filename = filename.substring(1);
         }
@@ -94,14 +106,13 @@ public class MainActivity extends Activity {
         String url = BASE_URL;
 
         try {
+            // Append Repository (e.g., "B2%2F")
             if (repositoryString != null && !repositoryString.isEmpty()) {
                 String repo = repositoryString;
-                // Sanitize trailing slash
-                if (repo.endsWith("/")) {
-                    repo = repo.substring(0, repo.length() - 1);
-                }
+                if (repo.endsWith("/")) repo = repo.substring(0, repo.length() - 1);
                 url += URLEncoder.encode(repo, "UTF-8").replace("+", "%20") + "%2F";
             }
+            // Append Filename (e.g., "Note_1.md")
             url += URLEncoder.encode(filename, "UTF-8").replace("+", "%20");
         } catch (UnsupportedEncodingException e) {
             Log.e(TAG, "URL Encoding failed", e);
@@ -115,21 +126,21 @@ public class MainActivity extends Activity {
         boolean inAppBrowser = prefs.getBoolean(SettingsActivity.PREF_IN_APP_BROWSER, true);
 
         try {
-            // Attempt configured launch technique
+            // Attempt Custom Tabs (In-App)
             if (inAppBrowser) {
                 CustomTabsIntent customTabsIntent = new CustomTabsIntent.Builder().build();
                 customTabsIntent.launchUrl(this, Uri.parse(url));
             } else {
-                throw new Exception("User preferred external browser");
+                throw new Exception("External browser requested");
             }
         } catch (Exception e) {
-            // Fallback robustly to the standard external intent if Custom Tabs crash or are manually bypassed
+            // Fallback robustly to standard External intent
             try {
                 Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
                 startActivity(browserIntent);
             } catch (Exception ex) {
                 Log.e(TAG, "Failed to launch external browser", ex);
-                Toast.makeText(this, "No browser app found to handle this link.", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "No web browser app found on device.", Toast.LENGTH_SHORT).show();
                 finish();
                 return;
             }
