@@ -1,0 +1,5 @@
+
+# Gradle build output
+build/
+*/build/
+.gradle/

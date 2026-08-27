@@ -1,0 +1,15 @@
+--- plugin-btn-browser/src/main/AndroidManifest.xml
++++ plugin-btn-browser/src/main/AndroidManifest.xml
+@@ -10,7 +10,8 @@
+        android:roundIcon="@mipmap/ic_launcher"
+        android:label="ZN Open in browser"
+        android:supportsRtl="true"
+-       android:theme="@style/AppTheme">
++       android:theme="@style/AppTheme">
+
+         <activity
+            android:name=".MainActivity"
+-           android:exported="true">
++           android:exported="true"
++           android:theme="@style/AppThemeTransparent">
+             <intent-filter>
