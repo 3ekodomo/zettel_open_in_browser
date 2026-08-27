@@ -21,11 +21,11 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
-      - name: Build with Gradle
-        run: ./gradlew :plugin-btn-browser:assembleRelease
+      - name: Build signed APK
+        run: ./gradlew :plugin-btn-browser:assembleRelease --no-daemon
 
       - name: Rename APK
-        run: mv plugin-btn-browser/build/outputs/apk/release/plugin-btn-browser-release-unsigned.apk "ZN open in browser.apk"
+        run: mv plugin-btn-browser/build/outputs/apk/release/plugin-btn-browser-release.apk "ZN open in browser.apk"
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
