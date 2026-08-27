@@ -21,7 +21,7 @@ public class Scanner extends ScanInterface {
                 // Intercept the metadata when Zettel Notes loads the note
                 currentRepository = category;
                 currentUri = fileUri;
-                return false;
+                return true;
             }
 
             @Override
