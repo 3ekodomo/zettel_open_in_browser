@@ -20,6 +20,9 @@ public class MainActivity extends Activity {
     private static final String TAG = "BrowserPlugin";
     private static final String BASE_URL = "https://3ekodomo.github.io/site/markdown?open=";
 
+    private boolean mBrowserLaunched = false;
+    private boolean mIsFirstResume = true;
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -33,10 +36,16 @@ public class MainActivity extends Activity {
         String uriString = intent.getStringExtra(AbstractPluginReceiver.EXTRAS_URI);
         String repositoryString = intent.getStringExtra(AbstractPluginReceiver.EXTRAS_REPOSITORY);
 
+        if (uriString == null) {
+            SharedPreferences notePrefs = getSharedPreferences(PluginReceiver.PREFS_NOTE_DATA, MODE_PRIVATE);
+            uriString = notePrefs.getString(AbstractPluginReceiver.EXTRAS_URI, null);
+            repositoryString = notePrefs.getString(AbstractPluginReceiver.EXTRAS_REPOSITORY, null);
+        }
+
         Log.d(TAG, "uri: " + uriString + ", repository: " + repositoryString);
 
         if (uriString == null) {
-            Log.e(TAG, "No URI found in intent extras");
+            Log.e(TAG, "No URI found in intent extras or SharedPreferences");
             finish();
             return;
         }
@@ -86,15 +95,28 @@ public class MainActivity extends Activity {
             if (inAppBrowser) {
                 CustomTabsIntent customTabsIntent = new CustomTabsIntent.Builder().build();
                 customTabsIntent.launchUrl(this, Uri.parse(url));
+                mBrowserLaunched = true;
             } else {
                 Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
                 startActivity(browserIntent);
+                mBrowserLaunched = true;
             }
         } catch (Exception e) {
             Log.e(TAG, "Failed to launch browser", e);
+            finish();
+            return;
         }
 
         setResult(RESULT_OK);
-        finish();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (mIsFirstResume) {
+            mIsFirstResume = false;
+        } else if (mBrowserLaunched) {
+            finish();
+        }
     }
 }
