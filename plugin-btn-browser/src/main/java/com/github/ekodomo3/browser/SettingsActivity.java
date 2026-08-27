@@ -7,6 +7,8 @@ import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.widget.ScrollView;
+import android.widget.Button;
 
 import org.eu.thedoc.zettelnotes.plugins.base.BaseActivity;
 
@@ -18,11 +20,14 @@ public class SettingsActivity extends BaseActivity {
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
+    AppLogger.init(this);
 
+    ScrollView scrollView = new ScrollView(this);
     LinearLayout root = new LinearLayout(this);
     root.setOrientation(LinearLayout.VERTICAL);
     int p = dp(20);
     root.setPadding(p, p, p, p);
+    scrollView.addView(root);
 
     TextView title = new TextView(this);
     title.setText("Open in Browser Settings");
@@ -62,7 +67,30 @@ public class SettingsActivity extends BaseActivity {
 
     root.addView(radioGroup, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
 
-    setContentView(root);
+    TextView logsTitle = new TextView(this);
+    logsTitle.setText("\n\nLogs:");
+    logsTitle.setTextSize(18);
+    root.addView(logsTitle, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+
+    TextView logsView = new TextView(this);
+    logsView.setText(AppLogger.getLogs());
+    logsView.setTextIsSelectable(true);
+    root.addView(logsView, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+
+    Button refreshBtn = new Button(this);
+    refreshBtn.setText("Refresh Logs");
+    refreshBtn.setOnClickListener(v -> logsView.setText(AppLogger.getLogs()));
+    root.addView(refreshBtn, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+
+    Button clearBtn = new Button(this);
+    clearBtn.setText("Clear Logs");
+    clearBtn.setOnClickListener(v -> {
+        AppLogger.clearLogs();
+        logsView.setText(AppLogger.getLogs());
+    });
+    root.addView(clearBtn, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+
+    setContentView(scrollView);
   }
 
   private int dp(int value) {
