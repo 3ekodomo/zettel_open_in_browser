@@ -6,6 +6,7 @@ import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
+import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 import androidx.browser.customtabs.CustomTabsIntent;
@@ -29,15 +30,12 @@ public class MainActivity extends Activity {
         super.onCreate(savedInstanceState);
 
         Intent intent = getIntent();
-        if (intent == null) {
-            finish();
-            return;
-        }
+        
+        // Attempt to get arguments passed directly by Zettel Notes Intent
+        String uriString = intent != null ? intent.getStringExtra(AbstractPluginReceiver.EXTRAS_URI) : null;
+        String repositoryString = intent != null ? intent.getStringExtra(AbstractPluginReceiver.EXTRAS_REPOSITORY) : null;
 
-        String uriString = intent.getStringExtra(AbstractPluginReceiver.EXTRAS_URI);
-        String repositoryString = intent.getStringExtra(AbstractPluginReceiver.EXTRAS_REPOSITORY);
-
-        // Fallback to SharedPreferences if extras are missing
+        // Fallback to SharedPreferences if intent extras are missing (populated by PluginReceiver)
         if (uriString == null) {
             SharedPreferences notePrefs = getSharedPreferences(PluginReceiver.PREFS_NOTE_DATA, MODE_PRIVATE);
             uriString = notePrefs.getString(AbstractPluginReceiver.EXTRAS_URI, null);
@@ -48,12 +46,14 @@ public class MainActivity extends Activity {
 
         if (uriString == null) {
             Log.e(TAG, "No URI found in intent extras or SharedPreferences");
+            Toast.makeText(this, "No note data found. Please open a note first.", Toast.LENGTH_SHORT).show();
             finish();
             return;
         }
 
         String filename = uriString;
         
+        // Parse filename out of the provided URI
         if (uriString.startsWith("content://") || uriString.startsWith("file://")) {
             filename = Uri.parse(uriString).getLastPathSegment();
             if (filename == null) {
@@ -64,7 +64,6 @@ public class MainActivity extends Activity {
             List<String> segments = uri.getPathSegments();
             // Expected segments: [app-links, zettel-notes, repository_name, folder1, folder2, ..., note.md]
             if (segments.size() > 2) {
-                // Correctly extract the repository name instead of clearing it
                 repositoryString = segments.get(2); 
                 
                 if (segments.size() > 3) {
@@ -82,11 +81,12 @@ public class MainActivity extends Activity {
 
         if (filename == null || filename.isEmpty()) {
             Log.e(TAG, "Filename is empty");
+            Toast.makeText(this, "Could not determine filename", Toast.LENGTH_SHORT).show();
             finish();
             return;
         }
 
-        // Sanitize leading slash to avoid double '%2F' encoding later
+        // Sanitize leading slash to avoid double '%2F' encoding
         if (filename.startsWith("/")) {
             filename = filename.substring(1);
         }
@@ -115,21 +115,27 @@ public class MainActivity extends Activity {
         boolean inAppBrowser = prefs.getBoolean(SettingsActivity.PREF_IN_APP_BROWSER, true);
 
         try {
+            // Attempt configured launch technique
             if (inAppBrowser) {
                 CustomTabsIntent customTabsIntent = new CustomTabsIntent.Builder().build();
                 customTabsIntent.launchUrl(this, Uri.parse(url));
-                mBrowserLaunched = true;
             } else {
-                Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
-                startActivity(browserIntent);
-                mBrowserLaunched = true;
+                throw new Exception("User preferred external browser");
             }
         } catch (Exception e) {
-            Log.e(TAG, "Failed to launch browser", e);
-            finish();
-            return;
+            // Fallback robustly to the standard external intent if Custom Tabs crash or are manually bypassed
+            try {
+                Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+                startActivity(browserIntent);
+            } catch (Exception ex) {
+                Log.e(TAG, "Failed to launch external browser", ex);
+                Toast.makeText(this, "No browser app found to handle this link.", Toast.LENGTH_SHORT).show();
+                finish();
+                return;
+            }
         }
 
+        mBrowserLaunched = true;
         setResult(RESULT_OK);
     }
 
@@ -139,7 +145,8 @@ public class MainActivity extends Activity {
         if (mIsFirstResume) {
             mIsFirstResume = false;
         } else if (mBrowserLaunched) {
-            finish(); // Close this transparent activity once we return from the browser
+            // Close this transparent activity once we return from the browser screen
+            finish(); 
         }
     }
 }
