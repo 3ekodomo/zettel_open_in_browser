@@ -1,8 +1,6 @@
 package com.github.ekodomo3.browser;
 
-import android.app.Activity;
 import android.content.Intent;
-import android.util.Log;
 import org.eu.thedoc.zettelnotes.interfaces.ButtonInterface;
 
 public class Button extends ButtonInterface {
@@ -16,15 +14,17 @@ public class Button extends ButtonInterface {
       if (mCallback != null) {
         Intent intent = new Intent(INTENT_ACTION);
         
-        // Inject the captured URI and Repository into the intent
-        if (Scanner.currentUri != null) {
-            intent.putExtra(org.eu.thedoc.zettelnotes.broadcasts.AbstractPluginReceiver.EXTRAS_URI, Scanner.currentUri);
-        }
-        if (Scanner.currentRepository != null) {
-            intent.putExtra(org.eu.thedoc.zettelnotes.broadcasts.AbstractPluginReceiver.EXTRAS_REPOSITORY, Scanner.currentRepository);
+        try {
+            // Retrieve data using the new API methods
+            String relativeFileName = mCallback.getRelativeFileName();
+            if (relativeFileName != null) {
+                intent.putExtra("relativeFileName", relativeFileName);
+            }
+        } catch (Throwable t) {
+            AppLogger.e("Button", "Failed to retrieve relative file name. Ensure Zettel Notes is updated.", t);
         }
         
-        mCallback.setActivityResultListener(result -> { /* no result expected */ });
+        mCallback.setActivityResultListener((resultCode, data) -> { /* no result expected */ });
         mCallback.startActivityForResult(intent);
       }
     }
@@ -32,7 +32,7 @@ public class Button extends ButtonInterface {
     @Override
     public boolean onLongClick() {
       if (mCallback != null) {
-        mCallback.setActivityResultListener(result -> { /* no result expected */ });
+        mCallback.setActivityResultListener((resultCode, data) -> { /* no result expected */ });
         mCallback.startActivityForResult(new Intent(INTENT_ACTION_SETTINGS));
         return true;
       }

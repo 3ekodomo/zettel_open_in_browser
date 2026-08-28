@@ -16,3 +16,4 @@ dependencyResolutionManagement {
 rootProject.name = "Zettel Notes Browser Plugin"
 include ':basemodule'
 include ':plugin-btn-browser'
+include ':zettel-api'

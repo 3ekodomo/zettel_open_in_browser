@@ -7,9 +7,6 @@
         <intent>
             <action android:name="org.eu.thedoc.zettelnotes.intent.buttons" />
         </intent>
-        <intent>
-            <action android:name="org.eu.thedoc.zettelnotes.intent.scanner" />
-        </intent>
     </queries>
 
     <application
@@ -23,16 +20,12 @@
         <meta-data
             android:name="@string/plugin_button_metadata_api_string"
             android:value="@string/button_api_version" />
-        <meta-data
-            android:name="@string/plugin_scan_metadata_api_string"
-            android:value="@string/scan_api_version" />
+
         <activity
            android:name=".LauncherActivity"
            android:exported="true">
             <intent-filter>
                 <action android:name="org.eu.thedoc.zettelnotes.intent.buttons" />
-                <!-- Add this line so Zettel Notes discovers the Scanner class -->
-                <action android:name="org.eu.thedoc.zettelnotes.intent.scanner" /> 
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>
@@ -66,17 +59,5 @@
             </intent-filter>
         </activity>
 
-        <receiver
-           android:name=".PluginReceiver"
-           android:exported="true">
-            <intent-filter>
-                <action android:name="org.eu.thedoc.zettelnotes.NOTE_OPENED" />
-                <action android:name="org.eu.thedoc.zettelnotes.action.NOTE_OPENED" />
-                <action android:name="org.eu.thedoc.zettelnotes.broadcast.NOTE_OPENED" />
-                <action android:name="org.eu.thedoc.zettelnotes.intent.NOTE_OPENED" />
-            </intent-filter>
-        </receiver>
-
     </application>
-
 </manifest>
