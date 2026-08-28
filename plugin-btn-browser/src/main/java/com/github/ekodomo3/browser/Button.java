@@ -16,12 +16,21 @@ public class Button extends ButtonInterface {
       if (mCallback != null) {
         Intent intent = new Intent(INTENT_ACTION);
         
-        // Inject the captured URI and Repository into the intent
-        if (Scanner.currentUri != null) {
-            intent.putExtra(org.eu.thedoc.zettelnotes.broadcasts.AbstractPluginReceiver.EXTRAS_URI, Scanner.currentUri);
+        // Pass the filename and relative filename using the updated API
+        String fileName = null;
+        String relativeFileName = null;
+        try {
+            fileName = mCallback.getFileName();
+            relativeFileName = mCallback.getRelativeFileName();
+        } catch (Throwable t) {
+            Log.e("BrowserPlugin", "Method not found in callback", t);
         }
-        if (Scanner.currentRepository != null) {
-            intent.putExtra(org.eu.thedoc.zettelnotes.broadcasts.AbstractPluginReceiver.EXTRAS_REPOSITORY, Scanner.currentRepository);
+
+        if (fileName != null) {
+            intent.putExtra("EXTRAS_FILE_NAME", fileName);
+        }
+        if (relativeFileName != null) {
+            intent.putExtra("EXTRAS_RELATIVE_FILE_NAME", relativeFileName);
         }
         
         mCallback.setActivityResultListener(result -> { /* no result expected */ });

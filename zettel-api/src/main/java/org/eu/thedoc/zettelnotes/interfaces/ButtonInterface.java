@@ -54,6 +54,10 @@ public abstract class ButtonInterface {
     String getTextSelected(boolean returnAllIfEmpty);
 
     void insertUri(Uri uri);
+
+    String getFileName();
+
+    String getRelativeFileName();
   }
 
 }

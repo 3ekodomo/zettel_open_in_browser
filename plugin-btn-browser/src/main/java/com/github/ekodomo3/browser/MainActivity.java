@@ -11,8 +11,6 @@ import android.widget.Toast;
 import androidx.annotation.Nullable;
 import androidx.browser.customtabs.CustomTabsIntent;
 
-import org.eu.thedoc.zettelnotes.broadcasts.AbstractPluginReceiver;
-
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.List;
@@ -41,71 +39,16 @@ public class MainActivity extends Activity {
             }
         }
 
-        // Attempt to get arguments passed directly by Zettel Notes Intent
-        String uriString = null;
-        String repositoryString = null;
+        String filename = null;
 
         if (intent != null && intent.getExtras() != null) {
-            Object uriObj = intent.getExtras().get(AbstractPluginReceiver.EXTRAS_URI);
-            if (uriObj != null) uriString = uriObj.toString();
-
-            Object repoObj = intent.getExtras().get(AbstractPluginReceiver.EXTRAS_REPOSITORY);
-            if (repoObj != null) repositoryString = repoObj.toString();
-        }
-
-        // Fallback to SharedPreferences if intent extras are missing (populated by PluginReceiver)
-        if (uriString == null) {
-            SharedPreferences notePrefs = getSharedPreferences(PluginReceiver.PREFS_NOTE_DATA, MODE_PRIVATE);
-            uriString = notePrefs.getString(AbstractPluginReceiver.EXTRAS_URI, null);
-            repositoryString = notePrefs.getString(AbstractPluginReceiver.EXTRAS_REPOSITORY, null);
-            AppLogger.d(TAG, "Loaded from SharedPreferences - uri: " + uriString + ", repository: " + repositoryString);
-        } else {
-            AppLogger.d(TAG, "Loaded from Intent - uri: " + uriString + ", repository: " + repositoryString);
-        }
-
-        // ABORT TRIGGER: If the plugin missed the NOTE_OPENED broadcast
-        if (uriString == null) {
-            AppLogger.e(TAG, "No URI found in intent extras or SharedPreferences");
-            Toast.makeText(this, "Note location not found!\nPlease close this note in Zettel Notes and open it again.", Toast.LENGTH_LONG).show();
-            finish();
-            return;
-        }
-
-        String filename = uriString;
-        String decodedUri = Uri.decode(uriString);
-        
-        // Smarter URI parsing to extract the exact relative file path (preserves subfolders)
-        if (decodedUri.startsWith("content://") || decodedUri.startsWith("file://")) {
-            if (repositoryString != null && !repositoryString.isEmpty() && decodedUri.contains(repositoryString + "/")) {
-                // Extract everything AFTER the repository name
-                filename = decodedUri.substring(decodedUri.indexOf(repositoryString + "/") + repositoryString.length() + 1);
+            Object relativeFileNameObj = intent.getExtras().get("EXTRAS_RELATIVE_FILE_NAME");
+            if (relativeFileNameObj != null) {
+                filename = relativeFileNameObj.toString();
             } else {
-                // Fallback basic segment extraction
-                String lastSegment = Uri.parse(decodedUri).getLastPathSegment();
-                if (lastSegment != null) {
-                    if (lastSegment.contains("/")) {
-                        filename = lastSegment.substring(lastSegment.lastIndexOf('/') + 1);
-                    } else if (lastSegment.contains(":")) {
-                        filename = lastSegment.substring(lastSegment.lastIndexOf(':') + 1);
-                    } else {
-                        filename = lastSegment;
-                    }
-                }
-            }
-        } else if (decodedUri.startsWith("https://thedoc.eu.org/app-links/zettel-notes/")) {
-            Uri uri = Uri.parse(decodedUri);
-            List<String> segments = uri.getPathSegments();
-            if (segments.size() > 2) {
-                repositoryString = segments.get(2); 
-                if (segments.size() > 3) {
-                    StringBuilder sb = new StringBuilder();
-                    for (int i = 3; i < segments.size(); i++) {
-                        if (i > 3) sb.append("/");
-                        sb.append(segments.get(i));
-                    }
-                    filename = sb.toString();
-                } else {
-                    filename = "";
+                Object fileNameObj = intent.getExtras().get("EXTRAS_FILE_NAME");
+                if (fileNameObj != null) {
+                    filename = fileNameObj.toString();
                 }
             }
         }

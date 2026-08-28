@@ -1,0 +1,1 @@
+I'll fix this by doing the replacements again using `replace_with_git_merge_diff`. I thought they were saved but it seems I did `git reset HEAD` and threw away my own changes to `MainActivity`, `Button`, and `AndroidManifest.xml`.
