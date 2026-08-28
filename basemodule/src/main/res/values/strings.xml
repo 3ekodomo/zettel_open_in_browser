@@ -1,8 +1,0 @@
-<resources>
-    <string name="plugin_button_metadata_api_string">org.eu.thedoc.zettelnotes.intent.buttons.version</string>
-    <string name="plugin_scan_metadata_api_string">org.eu.thedoc.zettelnotes.intent.scanner.version</string>
-    <string name="plugin_markdown_metadata_api_string">org.eu.thedoc.zettelnotes.intent.markdown.version</string>
-    <string name="button_api_version">28</string>
-    <string name="scan_api_version">28</string>
-    <string name="markdown_api_version">28</string>
-</resources>
