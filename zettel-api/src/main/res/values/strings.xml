@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="plugin_button_metadata_api_string">button_api_version</string>
+    <string name="button_api_version">1</string>
+    <string name="plugin_scan_metadata_api_string">scan_api_version</string>
+    <string name="scan_api_version">1</string>
+</resources>

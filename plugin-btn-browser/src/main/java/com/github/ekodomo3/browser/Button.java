@@ -1,8 +1,6 @@
 package com.github.ekodomo3.browser;
 
-import android.app.Activity;
 import android.content.Intent;
-import android.util.Log;
 import org.eu.thedoc.zettelnotes.interfaces.ButtonInterface;
 
 public class Button extends ButtonInterface {
@@ -14,14 +12,10 @@ public class Button extends ButtonInterface {
     @Override
     public void onClick() {
       if (mCallback != null) {
+        String relPath = mCallback.getRelativeFileName();
         Intent intent = new Intent(INTENT_ACTION);
-        
-        // Inject the captured URI and Repository into the intent
-        if (Scanner.currentUri != null) {
-            intent.putExtra(org.eu.thedoc.zettelnotes.broadcasts.AbstractPluginReceiver.EXTRAS_URI, Scanner.currentUri);
-        }
-        if (Scanner.currentRepository != null) {
-            intent.putExtra(org.eu.thedoc.zettelnotes.broadcasts.AbstractPluginReceiver.EXTRAS_REPOSITORY, Scanner.currentRepository);
+        if (relPath != null) {
+            intent.putExtra("relative_path", relPath);
         }
         
         mCallback.setActivityResultListener(result -> { /* no result expected */ });
